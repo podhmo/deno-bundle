@@ -1,35 +1,34 @@
-import { bundle } from "@deno/emit";
+import { transpile } from "@deno/emit";
 import { parseArgs, buildUsage } from "@podhmo/with-help";
 import { join as pathjoin, dirname, basename } from "jsr:@std/path"
-// deno run -A main.ts testdata/hello.ts
 
 async function main(args: string[]) {
   const options = parseArgs(args, {
-    name: "bundle",
-    usageText: `${buildUsage({name: "bundle"})} <filename>...`,
-    description: "bundle typescript file (deno/emit wrapper)",
+    name: "transpile",
+    usageText: `${buildUsage({ name: "transpile" })} <filename>...`,
+    description: "transpile typescript file (deno/emit wrapper)",
     string: ["dst"],
-    // string: ["config"], // TODO: loading tsconfig.json for something of jsxFactory option and so on.
   } as const);
 
   // TODO: concurrency
   for (const filename of options._) {
     const url = new URL(filename, import.meta.url);
-    const result = await bundle(url, {});
-
+    const resultMap = await transpile(url, {});
     if (options.dst !== undefined) {
-      // write to file
-      const writename = pathjoin(options.dst, basename(filename).replace(/\.tsx?$/, ".js"));
-      await Deno.mkdir(dirname(writename), { recursive: true });
+      for (const [filename, code] of resultMap.entries()) {
+        // write to file
+        const writename = pathjoin(options.dst, basename(filename).replace(/\.tsx?$/, ".js"));
+        await Deno.mkdir(dirname(writename), { recursive: true });
 
-      console.log(`write to ${writename}`);
-      await Deno.writeTextFile(writename, result.code);
+        console.log(`write to ${writename}`);
+        await Deno.writeTextFile(writename, code);
+      }
     } else {
       // write to stdout
-      if (options._.length > 1) {
+      for (const [filename, code] of resultMap.entries()) {
         console.log(`// ---- ${filename} ----`);
+        console.log(code);
       }
-      console.log(result.code);
     }
   }
 }

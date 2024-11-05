@@ -3,6 +3,10 @@
     "check": "deno check *.ts",
     "ok": "deno lint && deno task check && deno test"
   },
+  "compilerOptions": {
+    "jsx": "precompile",
+    "jsxImportSource": "npm:preact"
+  },
   "imports": {
     "@podhmo/with-help": "jsr:@podhmo/with-help@^0.3",
     "@deno/emit": "jsr:@deno/emit@0.46.0",

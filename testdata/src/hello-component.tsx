@@ -1,9 +1,18 @@
 /** @jsx h */
+/** @jsxFrag Fragment */
+import { h, Fragment } from "npm:preact";
 
-import { h } from 'npm:preact';
-
-export function hello(name: string) {
+export function Hello(name: string) {
     return (
-        <p>`Hello ${name}`</p>
+        <p>Hello {name}</p>
     )
+}
+
+/** fragment version */
+export function Hello2() {
+    return (
+        <>
+            <p>Hello World</p>
+        </>
+    );
 }
