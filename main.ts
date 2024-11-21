@@ -9,18 +9,25 @@ import { denoPlugins } from "@luca/esbuild-deno-loader";
 import { PathReplacePlugin } from "./esbuild-plugin.ts";
 
 
+const formats = ["js", "html"] as const;
+
+
 async function main() {
   const args = parseArgs(Deno.args, {
     name: "mini-bundle",
     usageText: `${buildUsage({ name: "mini-bundle" })} <filename>...`,
     description: "外部の依存は可能な限りesm.shの方に任せる bundler",
 
-    string: ["outdir", "deno-config"],
+    string: ["outdir", "deno-config", "format"],
     boolean: ["debug"],
 
+    default: {
+      format: "js",
+    },
     flagDescription: {
       outdir: "output directory",
       "deno-config": "deno.json or deno.jsonc",
+      format: `output format (${JSON.stringify(formats)}) (default: "js")`,
     },
   });
 
