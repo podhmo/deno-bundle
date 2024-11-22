@@ -133,8 +133,8 @@ export async function PathReplacePlugin(
 
 
 /** for optimization */
-export function extractImportedSymbolsFromCode(project: Project, code: string): Record<string, string[]> {
-  const exportedSymbols: Record<string, string[]> = {};
+export function extractImportedSymbolsFromCode(project: Project, code: string): Record<string, Set<string>> {
+  const symbols: Record<string, Set<string>> = {};
 
   const sourceFile = project.createSourceFile("temp.ts", code);
   const importDeclarations = sourceFile.getImportDeclarations();
@@ -144,12 +144,12 @@ export function extractImportedSymbolsFromCode(project: Project, code: string): 
 
     for (const namedImport of importDeclaration.getNamedImports()) {
       const symbol = namedImport.getName();
-      if (exportedSymbols[moduleSpecifier]) {
-        exportedSymbols[moduleSpecifier].push(symbol);
-      } else {
-        exportedSymbols[moduleSpecifier] = [symbol];
+      if (!symbols[moduleSpecifier]) {
+        symbols[moduleSpecifier] = new Set<string>();
       }
+      symbols[moduleSpecifier].add(symbol);
     }
+
   }
-  return exportedSymbols;
+  return symbols;
 }

@@ -11,7 +11,7 @@ Deno.test("extractSymbols", () => {
 
     const project = new Project({ useInMemoryFileSystem: true });
     const got = extractImportedSymbolsFromCode(project, code);
-    const want = { "./moduleA": ["something"] };
+    const want = { "./moduleA": new Set(["something"]) };
     assert.assertEquals(got, want);
 })
 
