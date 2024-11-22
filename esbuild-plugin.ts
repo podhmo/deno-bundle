@@ -1,5 +1,6 @@
 import * as esbuild from "npm:esbuild";
 import * as jsonc from "@std/jsonc";
+import { type Project } from "jsr:@ts-morph/ts-morph";
 
 /**
  esbuild plugin for rewriting deno's original import path to esm.sh URL
@@ -18,7 +19,7 @@ export async function PathReplacePlugin(
     specifiers: Record<string, string>;
   }
 
-  const debug = options.debug ? console.error : () => {};
+  const debug = options.debug ? console.error : () => { };
 
   let config: Config = { imports: {}, specifiers: {} }; // deno.json
   if (options.denoConfigPath) {
@@ -127,4 +128,28 @@ export async function PathReplacePlugin(
       // });
     },
   };
+}
+
+
+
+/** for optimization */
+export function extractImportedSymbolsFromCode(project: Project, code: string): Record<string, string[]> {
+  const exportedSymbols: Record<string, string[]> = {};
+
+  const sourceFile = project.createSourceFile("temp.ts", code);
+  const importDeclarations = sourceFile.getImportDeclarations();
+
+  for (const importDeclaration of importDeclarations) {
+    const moduleSpecifier = importDeclaration.getModuleSpecifierValue();
+
+    for (const namedImport of importDeclaration.getNamedImports()) {
+      const symbol = namedImport.getName();
+      if (exportedSymbols[moduleSpecifier]) {
+        exportedSymbols[moduleSpecifier].push(symbol);
+      } else {
+        exportedSymbols[moduleSpecifier] = [symbol];
+      }
+    }
+  }
+  return exportedSymbols;
 }
