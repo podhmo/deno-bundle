@@ -133,23 +133,31 @@ export async function PathReplacePlugin(
 
 
 /** for optimization */
-export function extractImportedSymbolsFromCode(project: Project, code: string): Record<string, Set<string>> {
-  const symbols: Record<string, Set<string>> = {};
-
+export function collectImportsFromCode(project: Project, code: string): Record<string, { named: Set<string>, namespace: Set<string> }> {
   const sourceFile = project.createSourceFile("temp.ts", code);
   const importDeclarations = sourceFile.getImportDeclarations();
 
+  // import-declartion is like:
+
+  const r: Record<string, { named: Set<string>, namespace: Set<string> }> = {};
   for (const importDeclaration of importDeclarations) {
     const moduleSpecifier = importDeclaration.getModuleSpecifierValue();
 
+    if (r[moduleSpecifier] === undefined) {
+      r[moduleSpecifier] = { named: new Set<string>(), namespace: new Set<string>() };
+    }
+    const info = r[moduleSpecifier];
+    // import {<named imports>} from <module specifier value>
     for (const namedImport of importDeclaration.getNamedImports()) {
-      const symbol = namedImport.getName();
-      if (!symbols[moduleSpecifier]) {
-        symbols[moduleSpecifier] = new Set<string>();
-      }
-      symbols[moduleSpecifier].add(symbol);
+      info.named.add(namedImport.getName());
     }
 
+    // import * as all from <module specifier value>
+    const namespaceImport = importDeclaration.getNamespaceImport();
+    if (namespaceImport) {
+      info.namespace.add(namespaceImport.getText());
+    }
   }
-  return symbols;
+
+  return r
 }
